@@ -47,7 +47,29 @@ const updateMeal = async (
   payload: Partial<TMeal>,
   image: IImageFile,
   authUser: IJwtPayload
-) => {};
+) => {
+  const user = await User.findById(authUser.userId);
+  const hasFoodCart = await FoodCart.findOne({ owner: user?._id });
+  const meal = await Meal.findOne({
+    _id: id,
+    foodCart: hasFoodCart?._id,
+  });
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+  }
+
+  if (!meal) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'Meal not found');
+  }
+  if (image) {
+    payload.image = image.path;
+  }
+  const updatedMeal = await Meal.findByIdAndUpdate(meal._id, payload, {
+    new: true,
+    runValidators: true,
+  });
+  return updatedMeal;
+};
 
 export const mealServices = {
   createMal,

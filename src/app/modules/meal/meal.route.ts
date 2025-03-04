@@ -18,4 +18,13 @@ router.post(
   mealControllers.handleCreateMeal
 );
 
+router.patch(
+  '/:id/update',
+  auth(UserRole.PROVIDER),
+  multerUpload.single('image'),
+  parsedBody,
+  validateRequest(mealValidations.updateMealSchema),
+  mealControllers.handleUpdateMeal
+);
+
 export const mealRoutes = router;

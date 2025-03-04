@@ -40,6 +40,9 @@ const createMealSchema = z.object({
     .min(1),
 });
 
+const updateMealSchema = createMealSchema.partial();
+
 export const mealValidations = {
   createMealSchema,
+  updateMealSchema,
 };
