@@ -31,6 +31,7 @@ const loginUser = async (payload: IAuth) => {
     role: user.role,
     isActive: user.isActive,
     hasFoodCart: user.hasFoodCart,
+    image: user?.photo,
   };
 
   const accessToken = generateToken(

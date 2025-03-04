@@ -18,6 +18,28 @@ const handleCreateMeal = tryCatchAsync(async (req, res) => {
   });
 });
 
+const handleGetAllMeal = tryCatchAsync(async (req, res) => {
+  const result = await mealServices.getAllMeal(req.query);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Meals are retrieved successfully',
+    meta: result.meta,
+    data: result.meals,
+  });
+});
+
+const handleGetSingleMeal = tryCatchAsync(async (req, res) => {
+  const id = req.params.id;
+  const result = await mealServices.getSingleMeal(id);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Meal retrieved successfully',
+    data: result,
+  });
+});
+
 const handleUpdateMeal = tryCatchAsync(async (req, res) => {
   const id = req.params.id;
   const mealData = req.body;
@@ -33,7 +55,22 @@ const handleUpdateMeal = tryCatchAsync(async (req, res) => {
   });
 });
 
+const handleDeleteMeal = tryCatchAsync(async (req, res) => {
+  const id = req.params.id;
+  const user = req.user as IJwtPayload;
+  const result = await mealServices.deleteMeal(id, user);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Meal deleted successfully',
+    data: result,
+  });
+});
+
 export const mealControllers = {
   handleCreateMeal,
+  handleGetAllMeal,
+  handleGetSingleMeal,
   handleUpdateMeal,
+  handleDeleteMeal,
 };

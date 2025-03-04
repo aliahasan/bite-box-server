@@ -13,4 +13,5 @@ export interface IJwtPayload {
   hasFoodCart: boolean;
   role: UserRole;
   isActive: boolean;
+  image?: string;
 }

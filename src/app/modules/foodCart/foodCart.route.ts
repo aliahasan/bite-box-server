@@ -25,7 +25,7 @@ router.post(
 );
 
 router.patch(
-  '/:id/update',
+  '/:id',
   auth(UserRole.PROVIDER),
   multerUpload.single('image'),
   parsedBody,

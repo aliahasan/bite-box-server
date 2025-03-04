@@ -9,6 +9,9 @@ import { mealValidations } from './meal.validation';
 
 const router = Router();
 
+router.get('/', mealControllers.handleGetAllMeal);
+router.get('/:id', mealControllers.handleGetSingleMeal);
+
 router.post(
   '/create-meal',
   auth(UserRole.PROVIDER),
@@ -19,12 +22,18 @@ router.post(
 );
 
 router.patch(
-  '/:id/update',
+  '/:id',
   auth(UserRole.PROVIDER),
   multerUpload.single('image'),
   parsedBody,
   validateRequest(mealValidations.updateMealSchema),
   mealControllers.handleUpdateMeal
+);
+
+router.delete(
+  '/:id',
+  auth(UserRole.PROVIDER),
+  mealControllers.handleDeleteMeal
 );
 
 export const mealRoutes = router;
