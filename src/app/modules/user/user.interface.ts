@@ -13,9 +13,11 @@ export interface IUser {
   role: UserRole;
   phone?: string;
   hasFoodCart: boolean;
-  dietaryPreferences?: string[];
+  dietaryPreferences?: string;
   preferredCuisines?: string[];
+  dietaryRestrictions?: string[];
   deliveryAddress?: string;
+  portion?: 'large' | 'medium' | 'small';
   isActive: boolean;
   photo?: string;
 }

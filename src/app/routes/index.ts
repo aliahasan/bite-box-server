@@ -23,7 +23,7 @@ const appRoutes = [
     route: orderRoutes,
   },
   {
-    path: '/order',
+    path: '/meal',
     route: mealRoutes,
   },
 ];

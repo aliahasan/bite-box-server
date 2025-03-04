@@ -1,6 +1,6 @@
 import { NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import jwt, { JwtPayload, TokenExpiredError } from 'jsonwebtoken';
 import config from '../config';
 import AppError from '../errors/appError';
 import { UserRole } from '../modules/user/user.interface';
@@ -10,7 +10,6 @@ import tryCatchAsync from '../utils/tryCatchAsync';
 const auth = (...requiredRoles: UserRole[]) => {
   return tryCatchAsync(async (req, res, next: NextFunction) => {
     const token = req.headers.authorization;
-    console.log(token);
 
     if (!token) {
       throw new AppError(StatusCodes.UNAUTHORIZED, 'you are not authorized');
@@ -22,14 +21,12 @@ const auth = (...requiredRoles: UserRole[]) => {
         config.jwt_refresh_secret as string
       ) as JwtPayload;
       const { role, email } = decoded;
-      console.log(decoded);
 
       const user = await User.findOne({
         email: email,
         role: role,
         isActive: true,
       });
-
       if (!user) {
         throw new AppError(StatusCodes.NOT_FOUND, 'you are not authorized');
       }
@@ -38,18 +35,20 @@ const auth = (...requiredRoles: UserRole[]) => {
         throw new AppError(StatusCodes.UNAUTHORIZED, 'you are not authorized');
       }
 
-      req.user = decoded as JwtPayload & { role: string };
+      req.user = decoded as JwtPayload;
       next();
     } catch (error) {
-      // if (error instanceof TokenExpiredError) {
-      //   return next(
-      //     new AppError(
-      //       StatusCodes.UNAUTHORIZED,
-      //       'Token has expired! Please login again.'
-      //     )
-      //   );
-      // }
-      // return next(new AppError(StatusCodes.UNAUTHORIZED, 'Invalid token!'));
+      if (error instanceof TokenExpiredError) {
+        return next(
+          new AppError(
+            StatusCodes.UNAUTHORIZED,
+            'Token has expired! Please login again.'
+          )
+        );
+      }
+      return next(
+        new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized')
+      );
     }
   });
 };

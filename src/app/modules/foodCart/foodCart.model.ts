@@ -28,7 +28,10 @@ const foodCartSchema = new Schema<IFoodCart>(
       type: String,
       required: true,
     },
-    cuisineSpecialties: [String],
+    cuisines: {
+      type: [String],
+      required: true,
+    },
     availability: {
       days: String,
       hours: String,

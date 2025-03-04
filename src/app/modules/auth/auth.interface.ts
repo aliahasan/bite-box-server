@@ -10,7 +10,7 @@ export interface IJwtPayload {
   userId: Types.ObjectId;
   name: string;
   email: string;
-  hasMealProvider: boolean;
+  hasFoodCart: boolean;
   role: UserRole;
   isActive: boolean;
 }

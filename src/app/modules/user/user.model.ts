@@ -38,9 +38,16 @@ const userSchema = new Schema<IUser, UserModel>(
       type: String,
       default: null,
     },
-
-    dietaryPreferences: [String],
+    portion: {
+      type: String,
+      enum: ['large', 'medium', 'small'],
+    },
+    dietaryPreferences: {
+      type: String,
+      default: null,
+    },
     preferredCuisines: [String],
+    dietaryRestrictions: [String],
     deliveryAddress: {
       type: String,
       default: null,
@@ -65,6 +72,11 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
+userSchema.post('save', function (doc, next) {
+  doc.password = '';
+  next();
+});
+
 userSchema.statics.isPasswordMatched = async function (
   plainTextPassword,
   hashedPassword
@@ -72,17 +84,18 @@ userSchema.statics.isPasswordMatched = async function (
   return await bcrypt.compare(plainTextPassword, hashedPassword);
 };
 
+userSchema.statics.isUserExistsByEmail = async function (email: string) {
+  return await User.findOne({ email }).select('+password');
+};
+
 userSchema.statics.checkUserExist = async function (userId: string) {
   const existingUser = await this.findById(userId);
-
   if (!existingUser) {
     throw new AppError(StatusCodes.NOT_ACCEPTABLE, 'User does not exist!');
   }
-
   if (!existingUser.isActive) {
     throw new AppError(StatusCodes.NOT_ACCEPTABLE, 'User is not active!');
   }
-
   return existingUser;
 };
 

@@ -6,7 +6,7 @@ export interface IFoodCart extends Document {
   contactNumber: string;
   owner: Schema.Types.ObjectId;
   description: string;
-  cuisineSpecialties: string[];
+  cuisines: string[];
   experience: number;
   availability: {
     days: string;

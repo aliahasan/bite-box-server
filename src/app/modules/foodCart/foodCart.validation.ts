@@ -8,16 +8,20 @@ export const foodCartSchema = z.object({
     .min(6, 'Contact number must be at least 6 digits')
     .max(13, 'Contact number must be at most 13 digits'),
   description: z.string().min(10, 'Description is required'),
-  cuisineSpecialties: z.array(z.string()),
+  cuisines: z.array(
+    z.string({
+      required_error: 'Cuisines are required',
+    })
+  ),
   availability: z.object({
     days: z.string().min(1, 'Availability days are required'),
     hours: z.string().min(1, 'Availability hours are required'),
   }),
 });
 
-// TypeScript Type Inference (Optional)
-// export type FoodCartType = z.infer<typeof FoodCartSchema>;
+const updateFoodCartSchema = foodCartSchema.partial();
 
 export const foodCartValidations = {
   foodCartSchema,
+  updateFoodCartSchema,
 };

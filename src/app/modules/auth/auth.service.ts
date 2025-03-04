@@ -6,7 +6,7 @@ import { IAuth, IJwtPayload } from './auth.interface';
 import { generateToken } from './auth.utils';
 
 const loginUser = async (payload: IAuth) => {
-  const user = await User.findOne({ email: payload.email });
+  const user = await User.findOne({ email: payload.email }).select('+password');
 
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
@@ -30,7 +30,7 @@ const loginUser = async (payload: IAuth) => {
     email: user.email,
     role: user.role,
     isActive: user.isActive,
-    hasMealProvider: user.hasFoodCart,
+    hasFoodCart: user.hasFoodCart,
   };
 
   const accessToken = generateToken(
