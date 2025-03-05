@@ -22,4 +22,5 @@ export interface IOrder extends Document {
   dietaryRestrictions?: string[];
   schedule?: Date;
   transactionId?: string;
+  orderConfirmation: 'accept' | 'decline';
 }

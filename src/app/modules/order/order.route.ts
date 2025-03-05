@@ -1,22 +1,33 @@
 import { Router } from 'express';
 import auth from '../../middlewares/auth';
-import validateRequest from '../../middlewares/validateRequest';
 import { UserRole } from '../user/user.interface';
 import { OrderControllers } from './order.controller';
-import { orderValidations } from './order.validation';
 
 const router = Router();
 
-router.get('/my-foodCart-orders', auth(UserRole.PROVIDER));
+router.get(
+  '/my-orders',
+  auth(UserRole.CUSTOMER),
+  OrderControllers.handleGetMyOrders
+);
+router.get(
+  '/my-foodCart-orders',
+  auth(UserRole.PROVIDER),
+  OrderControllers.handleGetMyFoodCartOrders
+);
+//get order details by provider
+router.get(
+  '/:orderId',
+  auth(UserRole.PROVIDER),
+  OrderControllers.handleGetOrderDetails
+);
 
-router.get('/my-orders', auth(UserRole.CUSTOMER));
-
-router.get('/:orderId', auth(UserRole.PROVIDER));
+// orders of customers
 
 router.post(
   '/create-order',
   auth(UserRole.CUSTOMER),
-  validateRequest(orderValidations.orderValidationSchema),
+  //   validateRequest(orderValidations.orderValidationSchema),
   OrderControllers.handleCreateOrder
 );
 

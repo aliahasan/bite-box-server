@@ -67,7 +67,6 @@ const createMal = async (
   if (!hasFoodCart.isActive) {
     throw new AppError(StatusCodes.FORBIDDEN, 'Food cart is not active');
   }
-
   if (image) {
     payload.image = image.path;
   }

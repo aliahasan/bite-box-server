@@ -63,6 +63,11 @@ const orderSchema = new Schema<IOrder>(
       enum: ['Pending', 'Processing', 'Completed', 'Cancelled'],
       default: 'Pending',
     },
+    orderConfirmation: {
+      type: String,
+      enum: ['accept', 'decline'],
+      default: 'accept',
+    },
     shippingAddress: {
       type: String,
       required: true,
