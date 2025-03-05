@@ -16,9 +16,11 @@ const createMealSchema = z.object({
     required_error: 'Category is required',
   }),
   dietaryPreferences: z.array(
-    z.string({
-      required_error: 'Dietary Preferences is required',
-    })
+    z
+      .string({
+        required_error: 'Dietary Preferences is required',
+      })
+      .optional()
   ),
   cuisine: z.string({
     required_error: 'Cuisine is required',
@@ -37,7 +39,8 @@ const createMealSchema = z.object({
     .number({
       required_error: 'Average rating is required',
     })
-    .min(1),
+    .min(1)
+    .optional(),
 });
 
 const updateMealSchema = createMealSchema.partial();

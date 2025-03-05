@@ -11,7 +11,7 @@ export type TMeal = {
   averageRating?: number;
   ratingCount?: number;
   cuisine: string;
-  ingredients: string[];
+  ingredients?: string[];
   portionSize: string[];
-  dietaryPreferences?: string;
+  dietaryPreferences?: string[];
 };

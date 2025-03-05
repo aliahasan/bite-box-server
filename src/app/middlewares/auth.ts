@@ -10,7 +10,6 @@ import tryCatchAsync from '../utils/tryCatchAsync';
 const auth = (...requiredRoles: UserRole[]) => {
   return tryCatchAsync(async (req, res, next: NextFunction) => {
     const token = req.headers.authorization;
-    console.log(token);
 
     if (!token) {
       throw new AppError(StatusCodes.UNAUTHORIZED, 'you are not authorized');
@@ -19,7 +18,7 @@ const auth = (...requiredRoles: UserRole[]) => {
     try {
       const decoded = jwt.verify(
         token,
-        config.jwt_refresh_secret as string
+        config.jwt_access_secret as string
       ) as JwtPayload;
       const { role, email } = decoded;
       const user = await User.findOne({
