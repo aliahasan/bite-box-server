@@ -3,6 +3,7 @@ import { authRoutes } from '../modules/auth/auth.routes';
 import { fooCartRoutes } from '../modules/foodCart/foodCart.route';
 import { mealRoutes } from '../modules/meal/meal.route';
 import { orderRoutes } from '../modules/order/order.route';
+import { sslRoutes } from '../modules/sslcommerz/sslcommerz.routes';
 import { userRoutes } from '../modules/user/user.route';
 const router = Router();
 const appRoutes = [
@@ -21,6 +22,10 @@ const appRoutes = [
   {
     path: '/order',
     route: orderRoutes,
+  },
+  {
+    path: '/ssl',
+    route: sslRoutes,
   },
   {
     path: '/meal',

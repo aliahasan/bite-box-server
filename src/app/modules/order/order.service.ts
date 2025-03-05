@@ -28,16 +28,17 @@ const createOrder = async (
         }
       }
     }
+    const transactionId = generateTransactionId();
     const order = new Order({
       ...orderData,
       customer: authUser.userId,
       foodCart: orderData.foodCart,
+      transactionId: transactionId,
     });
     console.log(order);
     const placedOrder = await order.save({ session });
     await placedOrder.populate('customer meals.meal');
 
-    const transactionId = generateTransactionId();
     let result;
 
     if (placedOrder.paymentMethod == 'Online') {

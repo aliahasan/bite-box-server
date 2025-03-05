@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import SSLCommerzPayment from 'sslcommerz-lts';
 import config from '../../config';
 import AppError from '../../errors/appError';
+import { Order } from '../order/order.model';
 const store_id = config.ssl.store_id as string;
 const store_password = config.ssl.store_pass as string;
 
@@ -17,7 +18,7 @@ const initPayment = async (paymentData: {
     total_amount,
     currency: 'BDT',
     tran_id, // Use unique tran_id for each API call
-    success_url: `${config.ssl.success_url}?tran_id=${tran_id}`,
+    success_url: `${config.ssl.validation_url}?tran_id=${tran_id}`,
     fail_url: config.ssl.failed_url as string,
     cancel_url: config.ssl.cancel_url as string,
     ipn_url: 'http://localhost:8000/api/v1/ssl/ipn',
@@ -85,20 +86,33 @@ const validatePaymentService = async (tran_id: string): Promise<boolean> => {
     ) {
       data = {
         status: 'Paid',
-        gatewayResponse: validateResponse.element[0],
+        paymentStatus: 'Paid',
       };
     } else if (validateResponse.element[0].status === 'INVALID_TRANSACTION') {
       data = {
         status: 'Failed',
-        gatewayResponse: validateResponse.element[0],
       };
     } else {
       data = {
         status: 'Failed',
-        gatewayResponse: validateResponse.element[0],
       };
     }
-    //  const updateOrder = await Order.findByIdAndUpdate()
+    const updatedOrder = await Order.findOneAndUpdate(
+      {
+        transactionId: validateResponse.element[0].tran_id,
+      },
+      data,
+      { new: true, session }
+    );
+    if (!updatedOrder) {
+      throw new Error('Order not updated');
+    }
+
+    if (data.status === 'Failed') {
+      throw new Error('Payment failed');
+    }
+    await session.commitTransaction();
+    session.endSession();
     return true;
   } catch (error) {
     await session.abortTransaction();

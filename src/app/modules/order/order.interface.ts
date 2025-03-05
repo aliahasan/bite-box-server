@@ -21,4 +21,5 @@ export interface IOrder extends Document {
   dietaryPreferences?: string[];
   dietaryRestrictions?: string[];
   schedule?: Date;
+  transactionId?: string;
 }

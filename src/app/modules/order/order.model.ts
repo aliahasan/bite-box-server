@@ -77,6 +77,9 @@ const orderSchema = new Schema<IOrder>(
       enum: ['Pending', 'Paid', 'Failed'],
       default: 'Pending',
     },
+    transactionId: {
+      type: String,
+    },
   },
   {
     timestamps: true,
