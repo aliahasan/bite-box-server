@@ -10,13 +10,13 @@ class QueryBuilder<T> {
   }
 
   search(searchableFields: string[]) {
-    const searchTerm = this?.query?.searchTerm;
-    if (searchTerm) {
+    const search = this?.query?.search;
+    if (search) {
       this.modelQuery = this.modelQuery.find({
         $or: searchableFields.map(
           (field) =>
             ({
-              [field]: { $regex: searchTerm, $options: 'i' },
+              [field]: { $regex: search, $options: 'i' },
             }) as FilterQuery<T>
         ),
       });
@@ -28,7 +28,7 @@ class QueryBuilder<T> {
   filter() {
     const queryObj = { ...this.query }; // copy
     // Filtering
-    const excludeFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
+    const excludeFields = ['search', 'sort', 'limit', 'page', 'fields'];
 
     excludeFields.forEach((el) => delete queryObj[el]);
 
@@ -62,6 +62,30 @@ class QueryBuilder<T> {
     this.modelQuery = this.modelQuery.select(fields);
     return this;
   }
+
+  ratings() {
+    const rating = Number(this.query.averageRating);
+    if (!isNaN(rating) && rating > 0) {
+      this.modelQuery = this.modelQuery.find({
+        averageRating: { $gte: rating },
+      } as FilterQuery<T>);
+    }
+    return this;
+  }
+
+  priceRange(minPrice?: number, maxPrice?: number) {
+    const priceFilter: Record<string, unknown> = {};
+    if (minPrice !== undefined) priceFilter.$gte = minPrice;
+    if (maxPrice !== undefined) priceFilter.$lte = maxPrice;
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      this.modelQuery = this.modelQuery.find({
+        price: priceFilter,
+      } as FilterQuery<T>);
+    }
+
+    return this;
+  }
+
   async countTotal() {
     const totalQueries = this.modelQuery.getFilter();
     const total = await this.modelQuery.model.countDocuments(totalQueries);
@@ -75,20 +99,6 @@ class QueryBuilder<T> {
       total,
       totalPage,
     };
-  }
-
-  priceRange(minPrice?: number, maxPrice?: number) {
-    const priceFilter: Record<string, unknown> = {};
-    if (minPrice !== undefined) priceFilter.$gte = minPrice;
-    if (maxPrice !== undefined) priceFilter.$lte = maxPrice;
-
-    if (minPrice !== undefined || maxPrice !== undefined) {
-      this.modelQuery = this.modelQuery.find({
-        price: priceFilter,
-      } as FilterQuery<T>);
-    }
-
-    return this;
   }
 }
 

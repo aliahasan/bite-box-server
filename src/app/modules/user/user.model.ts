@@ -43,14 +43,18 @@ const userSchema = new Schema<IUser, UserModel>(
       enum: ['large', 'medium', 'small'],
     },
     dietaryPreferences: {
-      type: String,
-      default: null,
+      type: [String],
     },
-    preferredCuisines: [String],
-    dietaryRestrictions: [String],
+    preferredCuisine: {
+      type: String,
+      default: '',
+    },
+    dietaryRestrictions: {
+      type: [String],
+    },
     deliveryAddress: {
       type: String,
-      default: null,
+      default: '',
     },
     isActive: {
       type: Boolean,

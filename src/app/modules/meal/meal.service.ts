@@ -4,23 +4,25 @@ import AppError from '../../errors/appError';
 import { IImageFile } from '../../interface/IImageFile';
 import { IJwtPayload } from '../auth/auth.interface';
 import FoodCart from '../foodCart/foodCart.model';
+import { Order } from '../order/order.model';
 import User from '../user/user.model';
 import { TMeal } from './meal.interface';
 import Meal from './meal.model';
 
 const getAllMeal = async (query: Record<string, unknown>) => {
-  const { minPrice, maxPrice } = query;
+  const { minPrice, maxPrice, ...pQuery } = query;
   const mealQuery = new QueryBuilder(
     Meal.find().populate({
       path: 'foodCart',
       select: '-owner',
     }),
-    query
+    pQuery
   )
     .search(['name', 'description', 'cuisine', 'dietaryPreferences'])
     .filter()
     .sort()
     .paginate()
+    .ratings()
     .fields()
     .priceRange(Number(minPrice) || 0, Number(maxPrice) || Infinity);
 
@@ -33,17 +35,7 @@ const getAllMeal = async (query: Record<string, unknown>) => {
   return result;
 };
 
-const getSingleMeal = async (id: string) => {
-  const meal = await Meal.findById(id).populate({
-    path: 'foodCart',
-    select: '-owner',
-  });
-  if (!meal) {
-    throw new AppError(StatusCodes.NOT_FOUND, 'Meal not found');
-  }
-  return meal;
-};
-
+// create-meal-by provider
 const createMal = async (
   payload: Partial<TMeal>,
   image: IImageFile,
@@ -78,6 +70,18 @@ const createMal = async (
   return result;
 };
 
+const getSingleMeal = async (id: string) => {
+  const meal = await Meal.findById(id).populate({
+    path: 'foodCart',
+    select: '-owner',
+  });
+  if (!meal) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'Meal not found');
+  }
+  return meal;
+};
+
+// update-meal-by provider
 const updateMeal = async (
   id: string,
   payload: Partial<TMeal>,
@@ -90,6 +94,10 @@ const updateMeal = async (
     _id: id,
     foodCart: hasFoodCart?._id,
   });
+  if (!hasFoodCart) {
+    throw new AppError(StatusCodes.BAD_REQUEST, "You don't have a food cart");
+  }
+
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
   }
@@ -107,22 +115,62 @@ const updateMeal = async (
   return updatedMeal;
 };
 
+// delete meal by provider
 const deleteMeal = async (id: string, authUser: IJwtPayload) => {
   const user = await User.findById(authUser.userId);
-  const hasFoodCart = await FoodCart.findOne({ owner: user?._id });
-  const meal = await Meal.findOne({
-    _id: id,
-    foodCart: hasFoodCart?._id,
-  });
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
   }
 
+  const hasFoodCart = await FoodCart.findOne({ owner: user._id });
+  if (!hasFoodCart) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'Food cart not found');
+  }
+
+  const meal = await Meal.findOne({
+    _id: id,
+    foodCart: hasFoodCart._id,
+  });
+
   if (!meal) {
     throw new AppError(StatusCodes.NOT_FOUND, 'Meal not found');
   }
-  const deleteMeal = await Meal.findByIdAndDelete(meal._id);
-  return deleteMeal;
+
+  //Check if the meal is already included in any order
+  const isMealExistInOrder = await Order.findOne({ 'meals.meal': meal._id });
+
+  if (isMealExistInOrder) {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      'Cannot delete meal because it is included in an existing order'
+    );
+  }
+
+  //  Delete the meal if it is not part of any order
+  const deletedMeal = await Meal.findByIdAndDelete(meal._id);
+  return deletedMeal;
+};
+
+// get all meal categories
+const getAllCategories = async () => {
+  try {
+    const categories = await Meal.distinct('category');
+    return categories;
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    throw new Error('Failed to get categories');
+  }
+};
+
+// get all cuisines of food
+const getAllCuisines = async () => {
+  try {
+    const cuisines = await Meal.distinct('cuisine');
+    return cuisines;
+  } catch (error) {
+    console.error('Error fetching cuisines:', error);
+    throw new Error('Failed to get cuisines');
+  }
 };
 
 export const mealServices = {
@@ -131,4 +179,6 @@ export const mealServices = {
   deleteMeal,
   getAllMeal,
   getSingleMeal,
+  getAllCategories,
+  getAllCuisines,
 };

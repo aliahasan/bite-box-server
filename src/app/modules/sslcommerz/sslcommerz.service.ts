@@ -48,7 +48,6 @@ const initPayment = async (paymentData: {
   try {
     const apiResponse = await sslcommerz.init(data);
     const GatewayPageURL = apiResponse.GatewayPageURL;
-    console.log(GatewayPageURL);
 
     if (GatewayPageURL) {
       return GatewayPageURL;
@@ -85,16 +84,15 @@ const validatePaymentService = async (tran_id: string): Promise<boolean> => {
       validateResponse.element[0].status === 'VALIDATED'
     ) {
       data = {
-        status: 'Paid',
         paymentStatus: 'Paid',
       };
     } else if (validateResponse.element[0].status === 'INVALID_TRANSACTION') {
       data = {
-        status: 'Failed',
+        paymentStatus: 'Failed',
       };
     } else {
       data = {
-        status: 'Failed',
+        paymentStatus: 'Failed',
       };
     }
     const updatedOrder = await Order.findOneAndUpdate(
@@ -108,7 +106,7 @@ const validatePaymentService = async (tran_id: string): Promise<boolean> => {
       throw new Error('Order not updated');
     }
 
-    if (data.status === 'Failed') {
+    if (data.paymentStatus === 'Failed') {
       throw new Error('Payment failed');
     }
     await session.commitTransaction();

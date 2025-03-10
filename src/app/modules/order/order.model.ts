@@ -34,7 +34,7 @@ const orderSchema = new Schema<IOrder>(
         },
         portionSize: {
           type: String,
-          required: true,
+          default: 'small',
         },
       },
     ],
@@ -58,15 +58,18 @@ const orderSchema = new Schema<IOrder>(
     dietaryRestrictions: {
       type: [String],
     },
-    status: {
+    orderStatus: {
       type: String,
       enum: ['Pending', 'Processing', 'Completed', 'Cancelled'],
       default: 'Pending',
     },
+    schedule: {
+      type: Date,
+    },
     orderConfirmation: {
       type: String,
-      enum: ['accept', 'decline'],
-      default: 'accept',
+      enum: ['Pending', 'Accept', 'Decline'],
+      default: 'Pending',
     },
     shippingAddress: {
       type: String,
@@ -121,18 +124,22 @@ orderSchema.pre('validate', async function (next) {
     let mealPrice = meal.price;
 
     if (item.portionSize === 'medium') {
-      mealPrice += 10; // Add 10 if portion size is medium
+      mealPrice += 20; // Add 20 if portion size is medium
     } else if (item.portionSize === 'large') {
-      mealPrice += 20; // Add 20 if portion size is large
+      mealPrice += 40; // Add 20 if portion size is large
     }
 
     item.unitPrice = mealPrice;
     totalAmount += mealPrice * item.quantity;
   }
 
+  const isDhaka = order?.shippingAddress?.toLowerCase()?.includes('dhaka');
+  const deliveryCharge = isDhaka ? 60 : 100;
+
   // Step 3: Set final total amount including delivery charge
   order.totalAmount = totalAmount;
-  order.finalAmount = totalAmount + (order.deliveryCharge || 30); // Default delivery charge is 30
+  order.deliveryCharge = deliveryCharge;
+  order.finalAmount = totalAmount + deliveryCharge;
   next();
 });
 

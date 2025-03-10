@@ -1,5 +1,6 @@
 import { StatusCodes } from 'http-status-codes';
 import mongoose from 'mongoose';
+import QueryBuilder from '../../builder/QueryBuilder';
 import AppError from '../../errors/appError';
 import { IImageFile } from '../../interface/IImageFile';
 import { IJwtPayload } from '../auth/auth.interface';
@@ -58,10 +59,44 @@ const createFoodCart = async (
   }
 };
 
+// get all food carts
+
+const getAllFoodCarts = async (query: Record<string, unknown>) => {
+  const foodCartsQuery = new QueryBuilder(FoodCart.find(), query)
+    .search(['name', 'description', 'cuisines', 'address'])
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+  const foodCarts = await foodCartsQuery.modelQuery.lean();
+  const meta = await foodCartsQuery.countTotal();
+  const result = {
+    foodCarts,
+    meta,
+  };
+  return result;
+};
+
+const getSingleFoodCart = async (id: string) => {
+  const foodCart = await FoodCart.findById(id);
+  if (!foodCart) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'Food Cart not found');
+  }
+  return foodCart;
+};
+
+// food cart profile
 const getMyFoodCart = async (authUser: IJwtPayload) => {
-  const result = await FoodCart.findOne({ owner: authUser.userId });
+  const user = await User.findById(authUser.userId);
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+  }
+  const result = await FoodCart.findOne({ owner: user._id }).populate({
+    path: 'owner',
+    select: 'name email photo phone',
+  });
   if (!result) {
-    throw new AppError(StatusCodes.NOT_FOUND, 'Food cart not found');
+    throw new AppError(StatusCodes.NOT_FOUND, 'You do not have any food cart');
   }
   return result;
 };
@@ -98,6 +133,8 @@ const updateFoodCart = async (
 
 export const foodCartServices = {
   createFoodCart,
+  getAllFoodCarts,
+  getSingleFoodCart,
   getMyFoodCart,
   updateFoodCart,
 };

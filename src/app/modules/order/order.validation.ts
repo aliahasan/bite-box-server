@@ -23,6 +23,9 @@ const orderValidationSchema = z.object({
   foodCart: z.string({
     required_error: 'Food cart ID is required',
   }),
+  dietaryPreferences: z.array(z.string()).optional(),
+  dietaryRestrictions: z.array(z.string()).optional(),
+  schedule: z.string().optional(),
 });
 
 export const orderValidations = {

@@ -27,6 +27,16 @@ const createOrder = async (
           if (!meal.available) {
             throw new Error(` ${meal.name} is not available anymore`);
           }
+          const foodCart = await FoodCart.findById(meal.foodCart).session(
+            session
+          );
+          if (!foodCart?.isActive) {
+            throw new AppError(
+              StatusCodes.BAD_REQUEST,
+              'Food cart is not active right now'
+            );
+          }
+
           await meal.save({ session });
         } else {
           throw new Error(`Meal is not found in `);
@@ -40,7 +50,6 @@ const createOrder = async (
       foodCart: orderData.foodCart,
       transactionId: transactionId,
     });
-    console.log(order);
     const placedOrder = await order.save({ session });
     await placedOrder.populate('customer meals.meal');
 
@@ -68,6 +77,7 @@ const createOrder = async (
   }
 };
 
+//get all orders of food cart
 const getMyFoodCartOrders = async (
   query: Record<string, unknown>,
   authUser: IJwtPayload
@@ -86,12 +96,12 @@ const getMyFoodCartOrders = async (
   const foodCartOrdersQuery = new QueryBuilder(
     Order.find({ foodCart: foodCart._id })
       .populate({
-        path: 'customer',
-        select: 'name email dietaryPreferences photo',
-      })
-      .populate({
         path: 'meals.meal',
-      }),
+        select: 'name image',
+      })
+      .select(
+        'totalAmount finalAmount orderStatus paymentStatus orderConfirmation createdAt meals.quantity meals.portionSize meals.unitPrice shippingAddress dietaryPreferences dietaryRestrictions schedule'
+      ) as any,
     query
   )
     .search(['meals.meal.name'])
@@ -99,11 +109,23 @@ const getMyFoodCartOrders = async (
     .sort()
     .paginate()
     .fields();
-  const result = await foodCartOrdersQuery.modelQuery;
+  const result = await foodCartOrdersQuery.modelQuery.lean();
   const meta = await foodCartOrdersQuery.countTotal();
+  const orderWithDetails = result.map((order) => ({
+    ...order,
+    //@ts-ignore
+    meals: order?.meals?.map((meal) => ({
+      _id: meal?.meal._id,
+      name: meal?.meal.name,
+      image: meal?.meal.image,
+      quantity: meal?.quantity,
+      portionSize: meal?.portionSize,
+      unitPrice: meal?.unitPrice,
+    })),
+  }));
   return {
+    result: orderWithDetails,
     meta,
-    result,
   };
 };
 
@@ -116,26 +138,76 @@ const getOrderDetails = async (orderId: string) => {
   return order;
 };
 
-// get all orders for customers
 const getMyOrders = async (
   query: Record<string, unknown>,
   authUser: IJwtPayload
 ) => {
   const orderQuery = new QueryBuilder(
-    Order.find({ customer: authUser.userId }).populate('meals.meal'),
+    Order.find({ customer: authUser.userId })
+      .populate({
+        path: 'meals.meal',
+        select: 'name image',
+      })
+      .select(
+        'totalAmount finalAmount orderStatus paymentStatus orderConfirmation createdAt meals.quantity meals.portionSize meals.unitPrice'
+      ) as any,
     query
   )
-    .search(['meal.meal meal.meal.description'])
+    .search(['meals.meal', 'meals.meal.description'])
     .filter()
     .sort()
     .paginate()
     .fields();
-  const result = await orderQuery.modelQuery;
+
+  const orders = await orderQuery.modelQuery.lean();
   const meta = await orderQuery.countTotal();
+  const ordersWithMealsDetails = orders.map((order) => ({
+    ...order,
+    //@ts-ignore
+    meals: order?.meals?.map((meal) => ({
+      _id: meal.meal._id,
+      name: meal.meal.name,
+      image: meal.meal.image,
+      quantity: meal.quantity,
+      portionSize: meal.portionSize,
+      unitPrice: meal.unitPrice,
+    })),
+  }));
+
   return {
-    result,
+    orders: ordersWithMealsDetails,
     meta,
   };
+};
+
+//update order status
+
+const updateOrderStatus = async (id: string, payload: { status: string }) => {
+  const order = await Order.findById(id);
+  if (!order) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'Order not found');
+  }
+
+  if (order.orderStatus === 'Completed') {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      'Order is completed, you cannot update it'
+    );
+  }
+  if (order.orderStatus === 'Cancelled') {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      'Order is already canceled, you cannot update it'
+    );
+  }
+
+  const result = await Order.findOneAndUpdate(
+    { _id: order._id },
+    { orderStatus: payload.status },
+    { new: true }
+  );
+
+  return result;
 };
 
 export const OrderServices = {
@@ -143,4 +215,5 @@ export const OrderServices = {
   getMyFoodCartOrders,
   getOrderDetails,
   getMyOrders,
+  updateOrderStatus,
 };

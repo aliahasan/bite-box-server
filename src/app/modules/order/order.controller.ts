@@ -53,6 +53,18 @@ const handleGetMyOrders = tryCatchAsync(async (req, res) => {
     statusCode: StatusCodes.OK,
     success: true,
     message: 'Order details retrieved successfully',
+    data: result.orders,
+    meta: result.meta,
+  });
+});
+
+const handleUpdateOrderStatus = tryCatchAsync(async (req, res) => {
+  const orderId = req.params.orderId;
+  const result = await OrderServices.updateOrderStatus(orderId, req.body);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Order details retrieved successfully',
     data: result,
   });
 });
@@ -62,4 +74,5 @@ export const OrderControllers = {
   handleGetMyFoodCartOrders,
   handleGetOrderDetails,
   handleGetMyOrders,
+  handleUpdateOrderStatus,
 };

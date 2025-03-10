@@ -27,11 +27,15 @@ router.get(
 router.post(
   '/create-order',
   auth(UserRole.CUSTOMER),
-  //   validateRequest(orderValidations.orderValidationSchema),
   OrderControllers.handleCreateOrder
 );
 
-router.patch('/:orderId/status', auth(UserRole.PROVIDER));
+router.patch(
+  '/:orderId/update-status',
+  auth(UserRole.PROVIDER),
+  auth(UserRole.PROVIDER),
+  OrderControllers.handleUpdateOrderStatus
+);
 
 router.patch('/:orderId/request', auth(UserRole.PROVIDER));
 

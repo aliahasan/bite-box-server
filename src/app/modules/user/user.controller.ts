@@ -32,6 +32,7 @@ const handleUpdateProfile = tryCatchAsync(async (req, res) => {
     req.file as IImageFile,
     req.user as IJwtPayload
   );
+  console.log(result, 'from service');
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,

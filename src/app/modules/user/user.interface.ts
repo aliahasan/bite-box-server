@@ -14,7 +14,7 @@ export interface IUser {
   phone?: string;
   hasFoodCart: boolean;
   dietaryPreferences?: string;
-  preferredCuisines?: string[];
+  preferredCuisine?: string;
   dietaryRestrictions?: string[];
   deliveryAddress?: string;
   portion?: 'large' | 'medium' | 'small';

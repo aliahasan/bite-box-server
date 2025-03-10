@@ -4,7 +4,7 @@ export interface IOrderMeal {
   meal: Types.ObjectId;
   quantity: number;
   unitPrice: number;
-  portionSize: 'small' | 'medium' | 'large';
+  portionSize?: 'small' | 'medium' | 'large';
 }
 
 export interface IOrder extends Document {
@@ -14,7 +14,7 @@ export interface IOrder extends Document {
   totalAmount: number;
   deliveryCharge: number;
   finalAmount: number;
-  status: 'Pending' | 'Processing' | 'Completed' | 'Cancelled';
+  orderStatus: 'Pending' | 'Processing' | 'Completed' | 'Cancelled';
   shippingAddress: string;
   paymentMethod: 'Cash' | 'Card' | 'Online';
   paymentStatus: 'Pending' | 'Paid' | 'Failed';
@@ -22,5 +22,5 @@ export interface IOrder extends Document {
   dietaryRestrictions?: string[];
   schedule?: Date;
   transactionId?: string;
-  orderConfirmation: 'accept' | 'decline';
+  orderConfirmation: 'Pending' | 'Accept' | 'Decline';
 }

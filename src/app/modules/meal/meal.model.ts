@@ -49,6 +49,7 @@ const mealSchema = new Schema<TMeal>(
       type: [String],
       required: true,
       enum: ['small', 'medium', 'large'],
+      default: ['small'],
     },
     averageRating: {
       type: Number,

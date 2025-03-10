@@ -45,10 +45,11 @@ const updateProfile = async (
     payload.photo = file.path;
   }
   const result = await User.findOneAndUpdate(
-    { user: authUser.userId },
+    { _id: authUser.userId },
     payload,
     {
       new: true,
+      select: '-password',
     }
   );
   return result;
@@ -74,9 +75,9 @@ const updatePreferences = async (
     user.dietaryPreferences = payload.dietaryPreferences;
     updatedFields.dietaryPreferences = payload.dietaryPreferences;
   }
-  if (payload.preferredCuisines) {
-    user.preferredCuisines = payload.preferredCuisines;
-    updatedFields.preferredCuisines = payload.preferredCuisines;
+  if (payload.preferredCuisine) {
+    user.preferredCuisine = payload.preferredCuisine;
+    updatedFields.preferredCuisine = payload.preferredCuisine;
   }
   if (payload.dietaryRestrictions) {
     user.dietaryRestrictions = payload.dietaryRestrictions;

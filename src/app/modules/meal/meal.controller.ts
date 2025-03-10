@@ -29,6 +29,8 @@ const handleGetAllMeal = tryCatchAsync(async (req, res) => {
   });
 });
 
+// get all meals of food cart provider
+
 const handleGetSingleMeal = tryCatchAsync(async (req, res) => {
   const id = req.params.id;
   const result = await mealServices.getSingleMeal(id);
@@ -42,11 +44,10 @@ const handleGetSingleMeal = tryCatchAsync(async (req, res) => {
 
 const handleUpdateMeal = tryCatchAsync(async (req, res) => {
   const id = req.params.id;
-  const mealData = req.body;
   const image = req.file as IImageFile;
   const user = req.user as IJwtPayload;
 
-  const result = await mealServices.updateMeal(id, mealData, image, user);
+  const result = await mealServices.updateMeal(id, req.body, image, user);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
@@ -67,10 +68,31 @@ const handleDeleteMeal = tryCatchAsync(async (req, res) => {
   });
 });
 
+const handleGetAllCategories = tryCatchAsync(async (req, res) => {
+  const result = await mealServices.getAllCategories();
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Categories retrieved successfully',
+    data: result,
+  });
+});
+const handleGetAllCuisines = tryCatchAsync(async (req, res) => {
+  const result = await mealServices.getAllCuisines();
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Cuisines retrieved successfully',
+    data: result,
+  });
+});
+
 export const mealControllers = {
   handleCreateMeal,
   handleGetAllMeal,
   handleGetSingleMeal,
   handleUpdateMeal,
   handleDeleteMeal,
+  handleGetAllCategories,
+  handleGetAllCuisines,
 };

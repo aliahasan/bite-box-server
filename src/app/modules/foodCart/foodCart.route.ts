@@ -9,11 +9,15 @@ import { foodCartValidations } from './foodCart.validation';
 
 const router = Router();
 
+router.get('/', fooCartControllers.handleGetAllFoodCarts);
+
 router.get(
-  '/',
+  '/profile',
   auth(UserRole.PROVIDER),
   fooCartControllers.handleGetMyFoodCart
 );
+
+router.get('/:foodCartId', fooCartControllers.handleGetSingleFoodCart);
 
 router.post(
   '/create',

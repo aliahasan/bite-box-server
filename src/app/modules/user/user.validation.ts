@@ -12,6 +12,9 @@ const customerProfileUpdateSchema = z.object({
   phone: z.string().optional(),
   photo: z.string().optional(),
   deliveryAddress: z.string().optional(),
+  preferredCuisine: z.string().optional(),
+  dietaryRestrictions: z.array(z.string()).optional(),
+  dietaryPreferences: z.array(z.string()).optional(),
 });
 
 const updatePreferencesSchema = z.object({
