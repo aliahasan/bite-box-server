@@ -4,65 +4,75 @@ import { IJwtPayload } from '../../auth/auth.interface';
 import FoodCart from '../../foodCart/foodCart.model';
 import Meal from '../../meal/meal.model';
 import { Order } from '../../order/order.model';
-import User from '../../user/user.model';
 
 const getProviderMetaData = async (
   query: Record<string, unknown>,
   authUser: IJwtPayload
 ) => {
-  // Find the authenticated user
-  const user = await User.findById(authUser.userId);
-  if (!user) {
-    throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
-  }
-
   // Check if the user owns a food cart
-  const userFoodCart = await FoodCart.findOne({ owner: user._id });
+  const userFoodCart = await FoodCart.findOne({ owner: authUser.userId });
   if (!userFoodCart) {
     throw new AppError(StatusCodes.BAD_REQUEST, 'User does not have any shop');
   }
 
-  // Aggregate order data for this food cart
-  const orderStats = await Order.aggregate([
-    {
-      $match: { foodCart: userFoodCart._id },
-    },
-    {
-      $group: {
-        _id: '$orderStatus',
-        totalOrders: { $sum: 1 },
-        totalRevenue: { $sum: '$finalAmount' },
+  // Execute all queries in parallel
+  const [orderStats, paymentStats, totalMealItems] = await Promise.all([
+    // Fetch order statistics based on orderStatus
+
+    Order.aggregate([
+      { $match: { foodCart: userFoodCart._id } },
+      {
+        $group: {
+          _id: '$orderStatus',
+          totalOrders: { $sum: 1 },
+        },
       },
-    },
+    ]),
+
+    // Fetch revenue from paid orders
+    Order.aggregate([
+      { $match: { foodCart: userFoodCart._id, paymentStatus: 'Paid' } },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: '$finalAmount' },
+        },
+      },
+    ]),
+    //calculate the total meal item
+    Meal.countDocuments({ foodCart: userFoodCart._id }),
   ]);
 
-  // Format data for easy use
-  const formattedData = {
-    totalOrders: orderStats.reduce((acc, curr) => acc + curr.totalOrders, 0),
-    totalRevenue: orderStats.reduce((acc, curr) => acc + curr.totalRevenue, 0),
-    orderBreakdown: orderStats.map((status) => ({
-      status: status._id,
-      total: status.totalOrders,
-    })),
-  };
+  // Process order statistics and format as array
+  const totalOrders = orderStats.reduce(
+    (acc, curr) => acc + (curr.totalOrders || 0),
+    0
+  );
 
-  // Get total meal items for the food cart
-  const totalMealItems = await Meal.aggregate([
-    { $match: { foodCart: userFoodCart._id } },
+  const orderBreakdown = [
     {
-      $group: {
-        _id: null,
-        totalMeals: { $sum: 1 },
-      },
+      status: 'Pending',
+      total: orderStats.find((s) => s._id === 'Pending')?.totalOrders || 0,
     },
-  ]);
+    {
+      status: 'Cancelled',
+      total: orderStats.find((s) => s._id === 'Cancelled')?.totalOrders || 0,
+    },
+    {
+      status: 'Completed',
+      total: orderStats.find((s) => s._id === 'Completed')?.totalOrders || 0,
+    },
+  ];
 
-  const totalMealsCount =
-    totalMealItems.length > 0 ? totalMealItems[0].totalMeals : 0;
+  // Get total revenue from paid orders
+  const totalRevenue =
+    paymentStats.length > 0 ? paymentStats[0].totalRevenue : 0;
 
   return {
-    ...formattedData,
-    totalMealItems: totalMealsCount,
+    totalOrders,
+    totalRevenue,
+    totalMealItems,
+    orderBreakdown,
   };
 };
 

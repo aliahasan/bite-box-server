@@ -9,7 +9,7 @@ const app: Application = express();
 
 app.use(
   cors({
-    origin: 'http://localhost:3000',
+    origin: ['https://bitebox-meal.vercel.app', 'http://localhost:3000'],
     credentials: true,
   })
 );
@@ -20,7 +20,7 @@ app.use('/api/v1', router);
 app.get('/', (req: Request, res: Response) => {
   res.json({
     success: true,
-    message: 'Welcome to e-commerce API',
+    message: 'Welcome to BiteBox',
   });
 });
 
