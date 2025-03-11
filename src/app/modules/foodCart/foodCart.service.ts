@@ -4,6 +4,7 @@ import QueryBuilder from '../../builder/QueryBuilder';
 import AppError from '../../errors/appError';
 import { IImageFile } from '../../interface/IImageFile';
 import { IJwtPayload } from '../auth/auth.interface';
+import { Review } from '../reviews/review.model';
 import User from '../user/user.model';
 import { IFoodCart } from './foodCart.interface';
 import FoodCart from './foodCart.model';
@@ -76,13 +77,20 @@ const getAllFoodCarts = async (query: Record<string, unknown>) => {
   };
   return result;
 };
-
 const getSingleFoodCart = async (id: string) => {
   const foodCart = await FoodCart.findById(id);
   if (!foodCart) {
     throw new AppError(StatusCodes.NOT_FOUND, 'Food Cart not found');
   }
-  return foodCart;
+
+  const foodCartsReview = await Review.find({
+    foodCart: foodCart._id,
+  }).populate({
+    path: 'user',
+    select: 'name photo', // Selecting only name and photo from the user
+  });
+
+  return { foodCart, reviews: foodCartsReview };
 };
 
 // food cart profile
