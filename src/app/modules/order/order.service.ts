@@ -39,7 +39,7 @@ const createOrder = async (
 
           await meal.save({ session });
         } else {
-          throw new Error(`Meal is not found in `);
+          throw new Error(`Meal is not found in`);
         }
       }
     }
@@ -55,7 +55,7 @@ const createOrder = async (
 
     let result;
 
-    if (placedOrder.paymentMethod == 'Online') {
+    if (placedOrder.paymentMethod === 'Online') {
       result = await sslService.initPayment({
         total_amount: placedOrder.finalAmount,
         tran_id: transactionId,
@@ -70,7 +70,6 @@ const createOrder = async (
     return result;
   } catch (error) {
     console.log(error);
-    // Rollback the transaction in case of error
     await session.abortTransaction();
     session.endSession();
     throw error;
@@ -138,6 +137,7 @@ const getOrderDetails = async (orderId: string) => {
   return order;
 };
 
+// get all order of user/customers
 const getMyOrders = async (
   query: Record<string, unknown>,
   authUser: IJwtPayload
@@ -180,8 +180,7 @@ const getMyOrders = async (
   };
 };
 
-//update order status
-
+//update order status by meal provider
 const updateOrderStatus = async (id: string, payload: { status: string }) => {
   const order = await Order.findById(id);
   if (!order) {

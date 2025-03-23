@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+import { FlashSale } from '../flashSell/flashSale.model';
 import { TMeal } from './meal.interface';
 
 const mealSchema = new Schema<TMeal>(
@@ -16,6 +17,7 @@ const mealSchema = new Schema<TMeal>(
       type: Number,
       required: true,
     },
+
     description: {
       type: String,
       required: true,
@@ -25,8 +27,9 @@ const mealSchema = new Schema<TMeal>(
       required: true,
     },
     category: {
-      type: String,
-      required: true,
+      type: Schema.Types.ObjectId,
+      ref: 'Category',
+      required: [true, 'Category is required'],
     },
     available: {
       type: Boolean,
@@ -64,6 +67,15 @@ const mealSchema = new Schema<TMeal>(
     timestamps: true,
   }
 );
+
+mealSchema.methods.calculateOfferPrice = async function () {
+  const flashSale = await FlashSale.findOne({ meal: this._id });
+  if (flashSale) {
+    const discount = (flashSale.discountPercentage / 100) * this.price;
+    return this.price - discount;
+  }
+  return null; // or can be return 0 or another default value
+};
 
 const Meal = mongoose.model<TMeal>('Meal', mealSchema);
 export default Meal;

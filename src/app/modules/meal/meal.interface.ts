@@ -1,11 +1,12 @@
 import { Types } from 'mongoose';
 
-export type TMeal = {
+export interface TMeal extends Document {
   name: string;
   price: number;
   description: string;
   image: string;
-  category: string;
+  category: Types.ObjectId;
+  offerPrice?: number | null;
   available: boolean;
   foodCart: Types.ObjectId;
   averageRating?: number;
@@ -14,4 +15,7 @@ export type TMeal = {
   ingredients?: string[];
   portionSize: string[];
   dietaryPreferences?: string[];
-};
+  reviews?: Record<string, any> | [];
+
+  calculateOfferPrice(): Promise<number | null>;
+}

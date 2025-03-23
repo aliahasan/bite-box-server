@@ -3,19 +3,26 @@ import QueryBuilder from '../../builder/QueryBuilder';
 import AppError from '../../errors/appError';
 import { IImageFile } from '../../interface/IImageFile';
 import { IJwtPayload } from '../auth/auth.interface';
+import { FlashSale } from '../flashSell/flashSale.model';
 import FoodCart from '../foodCart/foodCart.model';
 import { Order } from '../order/order.model';
 import User from '../user/user.model';
 import { TMeal } from './meal.interface';
 import Meal from './meal.model';
 
+// get all the meal with offerPrice
 const getAllMeal = async (query: Record<string, unknown>) => {
   const { minPrice, maxPrice, ...pQuery } = query;
   const mealQuery = new QueryBuilder(
-    Meal.find().populate({
-      path: 'foodCart',
-      select: '-owner',
-    }),
+    Meal.find()
+      .populate({
+        path: 'foodCart',
+        select: '-owner',
+      })
+      .populate({
+        path: 'category',
+        select: 'name',
+      }),
     pQuery
   )
     .search(['name', 'description', 'cuisine', 'dietaryPreferences'])
@@ -27,9 +34,39 @@ const getAllMeal = async (query: Record<string, unknown>) => {
     .priceRange(Number(minPrice) || 0, Number(maxPrice) || Infinity);
 
   const meals = await mealQuery.modelQuery.lean();
+
   const meta = await mealQuery.countTotal();
+
+  //get flash sale discounts
+  const mealIds = meals.map((meal: any) => meal._id);
+
+  const flashSales = await FlashSale.find({
+    meal: { $in: mealIds },
+    discountPercentage: { $gt: 0 },
+  }).select('meal discountPercentage');
+
+  const flashSaleMap = flashSales.reduce(
+    (acc, { meal, discountPercentage }) => {
+      // @ts-ignore
+      acc[meal.toString()] = discountPercentage;
+      return acc;
+    },
+    {}
+  );
+  // Add offer price to meals
+  const updatedMeals = meals.map((meal: any) => {
+    //@ts-ignore
+    const discountPercentage = flashSaleMap[meal._id.toString()];
+    if (discountPercentage) {
+      meal.offerPrice = meal.price * (1 - discountPercentage / 100);
+    } else {
+      meal.offerPrice = null;
+    }
+    return meal;
+  });
+
   const result = {
-    meals,
+    meals: updatedMeals,
     meta,
   };
   return result;
@@ -70,15 +107,38 @@ const createMal = async (
   return result;
 };
 
+// get single meal with related products
 const getSingleMeal = async (id: string) => {
-  const meal = await Meal.findById(id).populate({
-    path: 'foodCart',
-    select: '-owner',
-  });
+  const meal = await Meal.findById(id)
+    .populate({
+      path: 'foodCart',
+      select: '-owner',
+    })
+    .populate('category');
   if (!meal) {
     throw new AppError(StatusCodes.NOT_FOUND, 'Meal not found');
   }
-  return meal;
+
+  const offerPrice = await meal.calculateOfferPrice();
+  const mealObj = meal.toObject();
+
+  // Find related meals (same category, excluding current meal)
+  const relatedMeals = await Meal.find({
+    category: meal.category,
+    _id: { $ne: meal._id },
+  })
+    .limit(4)
+    .populate({
+      path: 'foodCart',
+      select: '-owner',
+    })
+    .populate('category')
+    .exec();
+  return {
+    ...mealObj,
+    offerPrice,
+    relatedMeals,
+  };
 };
 
 // update-meal-by provider

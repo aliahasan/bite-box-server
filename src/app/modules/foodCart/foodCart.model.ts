@@ -20,6 +20,10 @@ const foodCartSchema = new Schema<IFoodCart>(
       type: String,
       required: true,
     },
+    experience: {
+      type: Number,
+      required: true,
+    },
     contactNumber: {
       type: String,
       required: true,

@@ -25,9 +25,6 @@ const getMyFoodCartsMeal = async (
     throw new AppError(StatusCodes.NOT_FOUND, 'Food cart not found');
   }
 
-  // Convert foodCart._id to a valid ObjectId
-  //   const foodCartId = new mongoose.Types.ObjectId(foodCart._id);
-
   const { minPrice, maxPrice, ...pQuery } = query;
   const mealQuery = new QueryBuilder(
     Meal.find({ foodCart: foodCart._id }),
@@ -42,14 +39,25 @@ const getMyFoodCartsMeal = async (
     .priceRange(Number(minPrice) || 0, Number(maxPrice) || Infinity);
 
   const meals = await mealQuery.modelQuery.lean();
-  const meta = await mealQuery.countTotal();
 
+  const mealWithOfferPrice = await Promise.all(
+    meals.map(async (meal) => {
+      const allMeals = await Meal.findById(meal._id);
+      const offerPrice = await allMeals?.calculateOfferPrice();
+      return {
+        ...meal,
+        offerPrice: Number(offerPrice) || null,
+      };
+    })
+  );
+  const meta = await mealQuery.countTotal();
   return {
-    meals,
+    meals: mealWithOfferPrice,
     meta,
   };
 };
 
+// update  meal stock by provider
 const updateMealStock = async (
   id: string,
   authUser: IJwtPayload,

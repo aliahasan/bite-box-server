@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { authRoutes } from '../modules/auth/auth.routes';
+import { categoryRoutes } from '../modules/category/category.route';
+import { flashSaleRoutes } from '../modules/flashSell/flashSale.routes';
 import { fooCartRoutes } from '../modules/foodCart/foodCart.route';
 import { mealRoutes } from '../modules/meal/meal.route';
 import { customerMetaRoutes } from '../modules/meta/customeMeta/customerMeta.route';
@@ -24,6 +26,14 @@ const appRoutes = [
     route: fooCartRoutes,
   },
   {
+    path: '/category',
+    route: categoryRoutes,
+  },
+  {
+    path: '/meal',
+    route: mealRoutes,
+  },
+  {
     path: '/order',
     route: orderRoutes,
   },
@@ -32,12 +42,12 @@ const appRoutes = [
     route: sslRoutes,
   },
   {
-    path: '/meal',
-    route: mealRoutes,
-  },
-  {
     path: '/foodcart-meal',
     route: providerRoutes,
+  },
+  {
+    path: '/flash-sale',
+    route: flashSaleRoutes,
   },
   {
     path: '/review',
