@@ -13,6 +13,7 @@ router.get('/', mealControllers.handleGetAllMeal);
 router.get('/categories', mealControllers.handleGetAllCategories);
 router.get('/cuisines', mealControllers.handleGetAllCuisines);
 router.get('/:id', mealControllers.handleGetSingleMeal);
+router.get('/trending', mealControllers.handleTrendingMeals);
 
 router.post(
   '/create-meal',

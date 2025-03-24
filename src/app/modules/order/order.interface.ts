@@ -12,6 +12,7 @@ export interface IOrder extends Document {
   foodCart: Types.ObjectId;
   meals: IOrderMeal[];
   totalAmount: number;
+  discount?: number;
   deliveryCharge: number;
   finalAmount: number;
   orderStatus: 'Pending' | 'Processing' | 'Completed' | 'Cancelled';

@@ -141,6 +141,60 @@ const getSingleMeal = async (id: string) => {
   };
 };
 
+// get trending meals
+
+const getTrendingMeals = async (limit: number) => {
+  const now = new Date();
+  const last30days = new Date(now.setDate(now.getDate() - 30));
+
+  const trendingMeals = await Order.aggregate([
+    {
+      $match: {
+        createdAt: { $gte: last30days },
+      },
+    },
+
+    {
+      $unwind: '$meals',
+    },
+    {
+      $group: {
+        _id: '$meals.meal',
+        orderCount: { $sum: '$meals.quantity' },
+      },
+    },
+    {
+      $sort: { orderCount: -1 },
+    },
+    {
+      $limit: limit || 10,
+    },
+    {
+      $lookup: {
+        from: 'meals',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'mealDetails',
+      },
+    },
+    {
+      $unwind: '$mealDetails',
+    },
+    {
+      $project: {
+        _id: 0,
+        mealId: '$_id',
+        orderCount: 1,
+        name: '$mealDetails.name',
+        price: '$mealDetails.price',
+        offerPrice: '$mealDetails.offerPrice',
+        image: '$mealDetails.image',
+      },
+    },
+  ]);
+  return trendingMeals;
+};
+
 // update-meal-by provider
 const updateMeal = async (
   id: string,
@@ -211,17 +265,6 @@ const deleteMeal = async (id: string, authUser: IJwtPayload) => {
   return deletedMeal;
 };
 
-// get all meal categories
-const getAllCategories = async () => {
-  try {
-    const categories = await Meal.distinct('category');
-    return categories;
-  } catch (error) {
-    console.error('Error fetching categories:', error);
-    throw new Error('Failed to get categories');
-  }
-};
-
 // get all cuisines of food
 const getAllCuisines = async () => {
   try {
@@ -233,6 +276,17 @@ const getAllCuisines = async () => {
   }
 };
 
+// get all meal categories
+const getAllCategories = async () => {
+  try {
+    const categories = await Meal.distinct('category');
+    return categories;
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    throw new Error('Failed to get categories');
+  }
+};
+
 export const mealServices = {
   createMal,
   updateMeal,
@@ -241,4 +295,5 @@ export const mealServices = {
   getSingleMeal,
   getAllCategories,
   getAllCuisines,
+  getTrendingMeals,
 };

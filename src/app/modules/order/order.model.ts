@@ -43,6 +43,11 @@ const orderSchema = new Schema<IOrder>(
       required: true,
       min: 0,
     },
+    discount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     deliveryCharge: {
       type: Number,
       default: 30,
@@ -94,12 +99,13 @@ const orderSchema = new Schema<IOrder>(
   }
 );
 
-// Pre-save hook to calculate total, delivery charge, and final price
+// Pre-save hook to calculate total, discount, delivery charge, and final price
 orderSchema.pre('validate', async function (next) {
   const order = this;
 
   // Step 1: Initialize total amount
   let totalAmount = 0;
+  let finalDiscount = 0;
   let foodCartId: Schema.Types.ObjectId | null = null;
 
   // Step 2: Calculate total amount for products
@@ -121,7 +127,12 @@ orderSchema.pre('validate', async function (next) {
     //@ts-ignore
     foodCartId = meal.foodCart._id;
 
+    const offerPrice = (await meal.calculateOfferPrice()) || 0;
+
     let mealPrice = meal.price;
+    if (offerPrice) {
+      mealPrice = Number(offerPrice);
+    }
 
     if (item.portionSize === 'medium') {
       mealPrice += 20; // Add 20 if portion size is medium
@@ -130,16 +141,19 @@ orderSchema.pre('validate', async function (next) {
     }
 
     item.unitPrice = mealPrice;
-    totalAmount += mealPrice * item.quantity;
+    const price = mealPrice * item.quantity;
+    console.log(price);
+    totalAmount += price;
   }
 
   const isDhaka = order?.shippingAddress?.toLowerCase()?.includes('dhaka');
   const deliveryCharge = isDhaka ? 60 : 100;
 
-  // Step 3: Set final total amount including delivery charge
+  // Step 3: Set final total amount including discount and delivery charge
   order.totalAmount = totalAmount;
+  order.discount = finalDiscount;
   order.deliveryCharge = deliveryCharge;
-  order.finalAmount = totalAmount + deliveryCharge;
+  order.finalAmount = totalAmount - finalDiscount + deliveryCharge;
   next();
 });
 

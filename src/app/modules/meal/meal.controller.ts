@@ -42,6 +42,18 @@ const handleGetSingleMeal = tryCatchAsync(async (req, res) => {
   });
 });
 
+// get trending meals
+const handleTrendingMeals = tryCatchAsync(async (req, res) => {
+  const { limit } = req.query;
+  const result = await mealServices.getTrendingMeals(Number(limit));
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Trending meals are retrieved successfully',
+    data: result,
+  });
+});
+
 const handleUpdateMeal = tryCatchAsync(async (req, res) => {
   const id = req.params.id;
   const image = req.file as IImageFile;
@@ -95,4 +107,5 @@ export const mealControllers = {
   handleDeleteMeal,
   handleGetAllCategories,
   handleGetAllCuisines,
+  handleTrendingMeals,
 };
