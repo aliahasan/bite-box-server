@@ -26,7 +26,6 @@ const createReview = async (
   if (!foodCartIsExist) {
     throw new AppError(StatusCodes.BAD_REQUEST, 'Food cart not found');
   }
-  console.log(payload);
   const review = new Review({
     review: payload.review,
     user: user._id,
@@ -36,6 +35,17 @@ const createReview = async (
   return review;
 };
 
+const getAllReviews = async () => {
+  const reviews = await Review.find().populate('user', 'name photo');
+
+  if (!reviews || reviews.length === 0) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'No reviews found');
+  }
+
+  return reviews;
+};
+
 export const reviewService = {
   createReview,
+  getAllReviews,
 };

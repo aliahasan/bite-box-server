@@ -5,6 +5,8 @@ import { reviewController } from './review.controller';
 
 const router = Router();
 
+router.get('/', reviewController.handleGetAllReviews);
+
 router.post(
   '/:foodCartId',
   auth(UserRole.CUSTOMER),

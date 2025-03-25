@@ -17,6 +17,16 @@ const handleCreateReview = tryCatchAsync(async (req, res) => {
   });
 });
 
+const handleGetAllReviews = tryCatchAsync(async (req, res) => {
+  const result = await reviewService.getAllReviews();
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'review  fetched successfully',
+    data: result,
+  });
+});
 export const reviewController = {
   handleCreateReview,
+  handleGetAllReviews,
 };

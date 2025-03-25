@@ -10,10 +10,10 @@ import { mealValidations } from './meal.validation';
 const router = Router();
 
 router.get('/', mealControllers.handleGetAllMeal);
+router.get('/trending', mealControllers.handleTrendingMeals);
 router.get('/categories', mealControllers.handleGetAllCategories);
 router.get('/cuisines', mealControllers.handleGetAllCuisines);
 router.get('/:id', mealControllers.handleGetSingleMeal);
-router.get('/trending', mealControllers.handleTrendingMeals);
 
 router.post(
   '/create-meal',

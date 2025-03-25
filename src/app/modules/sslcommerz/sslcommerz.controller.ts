@@ -9,7 +9,6 @@ const validatePaymentService = tryCatchAsync(async (req, res) => {
     res.redirect(303, config.ssl.success_url as string);
   } else {
     res.redirect(303, config.ssl.failed_url as string);
-    console.log(config.ssl.failed_url);
   }
 });
 

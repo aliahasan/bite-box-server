@@ -180,6 +180,7 @@ const getTrendingMeals = async (limit: number) => {
     {
       $unwind: '$mealDetails',
     },
+
     {
       $project: {
         _id: 0,
@@ -187,7 +188,8 @@ const getTrendingMeals = async (limit: number) => {
         orderCount: 1,
         name: '$mealDetails.name',
         price: '$mealDetails.price',
-        offerPrice: '$mealDetails.offerPrice',
+        cuisine: '$mealDetails.cuisine',
+        rating: '$mealDetails.averageRating',
         image: '$mealDetails.image',
       },
     },

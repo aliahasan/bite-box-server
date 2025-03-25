@@ -75,7 +75,6 @@ const validatePaymentService = async (tran_id: string): Promise<boolean> => {
     const validateResponse = await sslcommerz.transactionQueryByTransactionId({
       tran_id,
     });
-    console.log(validateResponse.element);
 
     let data;
 
